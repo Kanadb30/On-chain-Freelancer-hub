@@ -127,5 +127,11 @@ The current contract is a **minimal viable core**. The following extensions are 
 | **Multi-Currency Support** | Accept bids and payments in any Stellar-issued asset (USDC, EUR stablecoins, etc.) via Soroban's token interface |
 
 ---
+## Contract Details
+
+Contract ID - fd1ace078df6f58ac9520feced2d2420a8241937ec234dfe1eb53a2284296b63
+
+<img width="1865" height="725" alt="image" src="https://github.com/user-attachments/assets/52e44381-8bd0-4c37-8bcb-8c5c677ec7d1" />
+
 
 *Built with ❤️ on Stellar · Powered by Soroban SDK*
