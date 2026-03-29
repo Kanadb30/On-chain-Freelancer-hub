@@ -129,7 +129,7 @@ The current contract is a **minimal viable core**. The following extensions are 
 ---
 ## Contract Details
 
-Contract ID - fd1ace078df6f58ac9520feced2d2420a8241937ec234dfe1eb53a2284296b63
+Contract ID - CCV2N6JKKNQUKZIKNJPBHD7GICZESEXHQ73Q2CHBN5W5DSXXI36NG6NN
 
 <img width="1865" height="725" alt="image" src="https://github.com/user-attachments/assets/52e44381-8bd0-4c37-8bcb-8c5c677ec7d1" />
 
