@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { NETWORK } from "@/hooks/contract";
 import { Badge } from "@/components/ui/badge";
+import { useWallet } from "@/components/WalletProvider";
 
 function WalletIcon({ size = 16 }: { size?: number }) {
   return (
@@ -40,19 +43,15 @@ function PowerIcon() {
   );
 }
 
-interface NavbarProps {
-  walletAddress: string | null;
-  onConnect: () => void;
-  onDisconnect: () => void;
-  isConnecting: boolean;
-}
+const NAV_LINKS = [
+  { name: "Home", href: "/" },
+  { name: "Explore Jobs", href: "/explore" },
+  { name: "Post Job", href: "/post" },
+];
 
-export default function Navbar({
-  walletAddress,
-  onConnect,
-  onDisconnect,
-  isConnecting,
-}: NavbarProps) {
+export default function Navbar() {
+  const { walletAddress, connect, disconnect, isConnecting } = useWallet();
+  const pathname = usePathname();
   const [copied, setCopied] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -82,38 +81,50 @@ export default function Navbar({
 
   return (
     <nav
-      className={`sticky top-0 z-50 w-full border-b transition-all duration-300 animate-fade-in-down ${
+      className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
         scrolled
-          ? "border-white/[0.08] bg-[#050510]/90 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
-          : "border-white/[0.04] bg-transparent backdrop-blur-sm"
+          ? "border-slate-200 bg-white/90 backdrop-blur-xl shadow-sm"
+          : "border-transparent bg-transparent backdrop-blur-sm"
       }`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c6cf0] to-[#4fc3f7] shadow-[0_0_20px_rgba(124,108,240,0.3)]">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
-              <path d="M15 18H9" />
-              <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
-              <circle cx="17" cy="18" r="2" />
-              <circle cx="7" cy="18" r="2" />
-            </svg>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-base font-semibold tracking-tight text-white">
-              SupplyTrack
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        {/* Logo and Links */}
+        <div className="flex items-center gap-10">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 shadow-sm text-white group-hover:bg-indigo-600 transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                <path d="M15 18H9" />
+                <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+                <circle cx="17" cy="18" r="2" />
+                <circle cx="7" cy="18" r="2" />
+              </svg>
+            </div>
+            <span className="text-lg font-bold tracking-tight text-slate-900">
+              FreelanceHub
             </span>
-            <span className="hidden sm:inline-block text-[10px] font-mono text-white/20 border border-white/[0.06] rounded px-1.5 py-0.5">
-              v1.0
-            </span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-6">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`text-sm font-semibold transition-colors ${
+                  pathname === link.href ? "text-indigo-600" : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                {link.name}
+              </Link>
+            ))}
           </div>
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-3">
-          <Badge variant="success">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#34d399] animate-pulse" />
+        <div className="flex items-center gap-4">
+          <Badge variant="success" className="hidden sm:flex items-center gap-2 bg-emerald-50 text-emerald-700 border-emerald-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             {NETWORK}
           </Badge>
 
@@ -121,19 +132,17 @@ export default function Navbar({
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setShowDropdown(!showDropdown); }}
-                className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm transition-all hover:border-white/[0.15] hover:bg-white/[0.06]"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm transition-all hover:bg-slate-50"
               >
-                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#7c6cf0] to-[#4fc3f7] p-[1.5px]">
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-[#0a0a1a] text-[8px] font-bold text-white/80">
-                    {walletAddress.slice(0, 2)}
-                  </div>
+                <div className="h-6 w-6 flex items-center justify-center rounded-full bg-slate-900 text-[9px] font-bold text-white">
+                  {walletAddress.slice(0, 2)}
                 </div>
-                <span className="font-mono text-xs text-white/70">
+                <span className="font-mono text-xs text-slate-700">
                   {truncate(walletAddress)}
                 </span>
                 <svg
                   width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  className={`text-white/30 transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`}
+                  className={`text-slate-400 transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`}
                 >
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
@@ -142,28 +151,28 @@ export default function Navbar({
               {/* Dropdown */}
               {showDropdown && (
                 <div
-                  className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-xl border border-white/[0.08] bg-[#0c0c1d]/95 backdrop-blur-2xl shadow-2xl animate-fade-in-up"
+                  className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white backdrop-blur-3xl shadow-xl animate-fade-in-up"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="p-3 border-b border-white/[0.06]">
-                    <p className="text-[10px] uppercase tracking-wider text-white/25 mb-2">
+                  <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-2">
                       Connected Wallet
                     </p>
-                    <p className="font-mono text-xs text-white/60 break-all leading-relaxed">
+                    <p className="font-mono text-xs font-semibold text-slate-700 break-all leading-relaxed">
                       {walletAddress}
                     </p>
                   </div>
-                  <div className="p-1.5">
+                  <div className="p-2">
                     <button
                       onClick={() => { handleCopy(); setShowDropdown(false); }}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/60 hover:bg-white/[0.06] hover:text-white/90 transition-colors"
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
                     >
                       {copied ? <CheckSmallIcon /> : <CopyIcon />}
                       {copied ? "Copied!" : "Copy Address"}
                     </button>
                     <button
-                      onClick={() => { onDisconnect(); setShowDropdown(false); }}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#f87171]/70 hover:bg-[#f87171]/[0.08] hover:text-[#f87171] transition-colors"
+                      onClick={() => { disconnect(); setShowDropdown(false); }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <PowerIcon />
                       Disconnect
@@ -174,25 +183,23 @@ export default function Navbar({
             </div>
           ) : (
             <button
-              onClick={onConnect}
+              onClick={connect}
               disabled={isConnecting}
-              className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#7c6cf0] to-[#5b8cf0] p-[1px] transition-all hover:shadow-[0_0_25px_rgba(124,108,240,0.25)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-indigo-600 active:scale-95 disabled:opacity-50"
             >
-              <div className="flex items-center gap-2 rounded-[11px] bg-[#0c0c1d]/90 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
-                {isConnecting ? (
-                  <>
-                    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                    </svg>
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <WalletIcon size={14} />
-                    Connect
-                  </>
-                )}
-              </div>
+              {isConnecting ? (
+                <>
+                  <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <WalletIcon size={14} />
+                  Connect Wallet
+                </>
+              )}
             </button>
           )}
         </div>
