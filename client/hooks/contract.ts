@@ -10,6 +10,7 @@ import {
   nativeToScVal,
   scValToNative,
   rpc,
+  Account,
 } from "@stellar/stellar-sdk";
 import {
   isConnected,
@@ -26,7 +27,7 @@ import {
 
 /** Your deployed Soroban contract ID */
 export const CONTRACT_ADDRESS =
-  "CDJVMAX34YRCQ5JFC6SIOQOVSUY6XWEFYJOLF3SBCKU7CMI3IAP6HPWN";
+  "CCV2N6JKKNQUKZIKNJPBHD7GICZESEXHQ73Q2CHBN5W5DSXXI36NG6NN";
 
 /** Network passphrase (testnet by default) */
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
@@ -109,7 +110,16 @@ export async function callContract(
   sign: boolean = true
 ) {
   const contract = new Contract(CONTRACT_ADDRESS);
-  const account = await server.getAccount(caller);
+  let account;
+  try {
+    account = await server.getAccount(caller);
+  } catch (e) {
+    if (!sign) {
+      account = new Account(caller, "0");
+    } else {
+      throw e;
+    }
+  }
 
   const tx = new TransactionBuilder(account, {
     fee: "100",
@@ -212,57 +222,104 @@ export function toScValBool(value: boolean): xdr.ScVal {
 }
 
 // ============================================================
-// Supply Chain Tracker — Contract Methods
+// Freelancer Hub — Contract Methods
 // ============================================================
 
+export function toScValU64(value: number | bigint): xdr.ScVal {
+  return nativeToScVal(value, { type: "u64" });
+}
+
 /**
- * Add a product to the supply chain.
- * Calls: add_product(product_id: String, origin: String)
+ * Post a new job.
+ * Calls: post_job(title: String, descrip: String, budget: u64)
  */
-export async function addProduct(
+export async function postJob(
   caller: string,
-  productId: string,
-  origin: string
+  title: string,
+  descrip: string,
+  budget: number
 ) {
   return callContract(
-    "add_product",
-    [toScValString(productId), toScValString(origin)],
+    "post_job",
+    [toScValString(title), toScValString(descrip), toScValU64(budget)],
     caller,
     true
   );
 }
 
 /**
- * Update a product's status.
- * Calls: update_status(product_id: String, new_status: String)
+ * Submit a bid for a job.
+ * Calls: submit_bid(job_id: u64, proposal: String, ask_price: u64)
  */
-export async function updateProductStatus(
+export async function submitBid(
   caller: string,
-  productId: string,
-  newStatus: string
+  jobId: number,
+  proposal: string,
+  askPrice: number
 ) {
   return callContract(
-    "update_status",
-    [toScValString(productId), toScValString(newStatus)],
+    "submit_bid",
+    [toScValU64(jobId), toScValString(proposal), toScValU64(askPrice)],
     caller,
     true
   );
 }
 
 /**
- * Get product details (read-only).
- * Calls: get_product(product_id: String) -> Map<Symbol, String>
- * Returns: { origin: string, status: string } or null
+ * Accept a bid.
+ * Calls: accept_bid(job_id: u64, bid_id: u64)
  */
-export async function getProduct(
-  productId: string,
-  caller?: string
+export async function acceptBid(
+  caller: string,
+  jobId: number,
+  bidId: number
 ) {
-  return readContract(
-    "get_product",
-    [toScValString(productId)],
-    caller
+  return callContract(
+    "accept_bid",
+    [toScValU64(jobId), toScValU64(bidId)],
+    caller,
+    true
   );
+}
+
+/**
+ * Complete a job.
+ * Calls: complete_job(job_id: u64)
+ */
+export async function completeJob(
+  caller: string,
+  jobId: number
+) {
+  return callContract(
+    "complete_job",
+    [toScValU64(jobId)],
+    caller,
+    true
+  );
+}
+
+/**
+ * Get Hub Stats (read-only).
+ * Calls: view_hub_stats()
+ */
+export async function viewHubStats() {
+  return readContract("view_hub_stats", []);
+}
+
+/**
+ * Get Job (read-only).
+ * Calls: view_job(job_id: u64)
+ */
+export async function viewJob(jobId: number) {
+  return readContract("view_job", [toScValU64(jobId)]);
+}
+
+/**
+ * Get Bid (read-only).
+ * Calls: view_bid(bid_id: u64)
+ */
+export async function viewBid(bidId: number) {
+  return readContract("view_bid", [toScValU64(bidId)]);
 }
 
 export { nativeToScVal, scValToNative, Address, xdr };
