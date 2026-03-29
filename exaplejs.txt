@@ -1,0 +1,347 @@
+import {
+  Contract,
+  TransactionBuilder,
+  Networks,
+  BASE_FEE,
+  nativeToScVal,
+  scValToNative,
+  rpc as StellarRpc,
+} from "@stellar/stellar-sdk";
+
+import { userSignTransaction } from "./Freighter";
+
+/* ================= Config ================= */
+
+const RPC_URL = "https://soroban-testnet.stellar.org:443";
+const NETWORK = Networks.TESTNET;
+
+const CONTRACT_ADDRESS =
+  "CBK6DMOHM7I7G3IDNQS7JAJOCJ4XVO5SLXP6KHQAWNVTKW5YHETSE5UA";
+
+const server = new StellarRpc.Server(RPC_URL);
+
+const TX_PARAMS = {
+  fee: BASE_FEE,
+  networkPassphrase: NETWORK,
+};
+
+/* ================= Helpers ================= */
+
+const stringToScVal = (value) => nativeToScVal(value);
+const numberToU64 = (value) => nativeToScVal(value, { type: "u64" });
+
+/* ================= Core Contract Interaction ================= */
+
+async function contractInt(caller, fnName, values) {
+  // 1 Load account
+  const sourceAccount = await server.getAccount(caller);
+  const contract = new Contract(CONTRACT_ADDRESS);
+
+  // 2 Build tx
+  const builder = new TransactionBuilder(sourceAccount, TX_PARAMS);
+
+  if (Array.isArray(values)) {
+    builder.addOperation(contract.call(fnName, ...values));
+  } else if (values !== undefined && values !== null) {
+    builder.addOperation(contract.call(fnName, values));
+  } else {
+    builder.addOperation(contract.call(fnName));
+  }
+
+  const tx = builder.setTimeout(30).build();
+
+  // 3 Prepare transaction (legacy Soroban flow)
+  const preparedTx = await server.prepareTransaction(tx);
+
+  // 4 Convert to XDR
+  const xdr = preparedTx.toXDR();
+
+  // 5 Sign with Freighter
+  const signed = await userSignTransaction(xdr, caller);
+
+  const signedTx = TransactionBuilder.fromXDR(signed.signedTxXdr, NETWORK);
+
+  // 6 Send tx
+  const send = await server.sendTransaction(signedTx);
+
+  // 7 Poll
+  for (let i = 0; i < 10; i++) {
+    const res = await server.getTransaction(send.hash);
+
+    if (res.status === "SUCCESS") {
+      if (res.returnValue) {
+        return scValToNative(res.returnValue);
+      }
+      return null;
+    }
+
+    if (res.status === "FAILED") {
+      throw new Error("Transaction failed");
+    }
+
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+
+  throw new Error("Transaction timeout");
+}
+
+/* ================= Contract Functions ================= */
+
+async function sendFeedback(caller, feedbackText) {
+  try {
+    const value = stringToScVal(feedbackText);
+    const result = await contractInt(caller, "send_feedback", value);
+
+    console.log("Feedback ID:", Number(result));
+    return Number(result);
+  } catch (error) {
+    console.error("sendFeedback failed:", error);
+    throw error;
+  }
+}
+
+async function fetchFeedback(caller, feedbackId) {
+  try {
+    const value = numberToU64(feedbackId);
+    const result = await contractInt(caller, "fetch_feedback", value);
+
+    console.log("Fetched feedback:", result.message.toString());
+    return result.message.toString();
+  } catch (error) {
+    console.error("fetchFeedback failed:", error);
+    throw error;
+  }
+}
+
+/* ================= Exports ================= */
+
+export { sendFeedback, fetchFeedback };
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useContext } from "react";
+import { pubKeyData } from "../App";
+import { sendFeedback } from "./Soroban";
+
+export const SendFeedback = () => {
+  const [fbData, _setFbData] = useState("");
+  const [fbId, _setFbId] = useState();
+  const pubKey = useContext(pubKeyData);
+
+  const handleCreateFeedback = async () => {
+    await sendFeedback(pubKey, fbData).then((values) => _setFbId(values));
+  };
+
+  return (
+    <div className="flex flex-col font-semibold bg-green-300 rounded-lg my-4 items-center border p-4 w-full">
+      <div className="flex-wrap bg-emerald-400 w-full p-2 rounded-md sm:text-2xl font-bold text-center flex justify-between gap-3 items-center">
+        Create Feedback
+        <input
+          type="text"
+          className="sm:w-full p-2 rounded-md"
+          placeholder="Enter your Feedback"
+          onChange={(e) => _setFbData(e.target.value)}
+        />
+        <button
+          className="text-lg hover:bg-violet-500 bg-orange-700 rounded-md p-1 font-bold text-white"
+          onClick={handleCreateFeedback}
+        >
+          Create
+        </button>
+      </div>
+      <div>
+        <div className="text-2xl">Feedback Id</div>
+        <div className="text-2xl bg-cyan-300 p-4 border-4 border-black">
+          {fbId}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
+
+
+
+
+
+
+import React, { useState } from "react";
+import {
+  checkConnection,
+  retrievePublicKey,
+  getBalance,
+  getRequestAccess,
+  userInfo,
+} from "./Freighter";
+
+const Header = ({ pubKey, setPubKey }) => {
+  const [connected, setConnected] = useState(false);
+  const [balance, setBalance] = useState("0");
+
+  const connectWallet = async () => {
+    try {
+      const allowed = await checkConnection();
+
+      if (!allowed) return alert("Permission denied");
+
+      const key = await retrievePublicKey();
+      const bal = await getBalance();
+
+      setPubKey(key);
+      setBalance(Number(bal).toFixed(2));
+      setConnected(true);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <div className="bg-gray-300 h-20 flex justify-between items-center px-10">
+      <div className="text-3xl font-bold">Stellar dApp</div>
+
+      <div className="flex items-center gap-4">
+        {pubKey && (
+          <>
+            <div className="p-2 bg-gray-50 border rounded-md">
+              {`${pubKey.slice(0, 4)}...${pubKey.slice(-4)}`}
+            </div>
+
+            <div className="p-2 bg-gray-50 border rounded-md">
+              Balance: {balance} XLM
+            </div>
+          </>
+        )}
+
+        <button
+          onClick={connectWallet}
+          disabled={connected}
+          className={`text-xl w-52 rounded-md p-4 font-bold text-white ${
+            connected
+              ? "bg-green-500 cursor-not-allowed"
+              : "bg-blue-400 hover:bg-blue-500"
+          }`}
+        >
+          {connected ? "Connected" : "Connect Wallet"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Header;
+
+
+
+
+
+
+
+
+import {
+  signTransaction,
+  setAllowed,
+  getAddress,
+  requestAccess,
+} from "@stellar/freighter-api";
+import * as StellarSdk from "@stellar/stellar-sdk";
+
+const server = new StellarSdk.Horizon.Server(
+  "https://horizon-testnet.stellar.org",
+);
+
+const checkConnection = async () => {
+  return await setAllowed();
+};
+
+const getRequestAccess = async () => {
+  return await requestAccess();
+};
+
+const retrievePublicKey = async () => {
+  const { address } = await getAddress();
+  return address;
+};
+
+const getBalance = async () => {
+  await setAllowed();
+
+  const { address } = await getAddress();
+
+  const account = await server.loadAccount(address);
+
+  const xlm = account.balances.find((b) => b.asset_type === "native");
+
+  return xlm?.balance || "0";
+};
+
+const userSignTransaction = async (xdr, signWith) => {
+  return await signTransaction(xdr, {
+    networkPassphrase: StellarSdk.Networks.TESTNET,
+    accountToSign: signWith,
+  });
+};
+
+export {
+  checkConnection,
+  retrievePublicKey,
+  getBalance,
+  userSignTransaction,
+  getRequestAccess,
+};
+
+
+
+
+
+
+
+
+
+import React, { useState, useContext } from "react";
+import { pubKeyData } from "../App";
+import { fetchFeedback } from "./Soroban";
+
+export const FetchFeedback = () => {
+  const [fbData, _setFbData] = useState();
+  const [fbId, _setFbId] = useState("");
+  const pubKey = useContext(pubKeyData);
+
+  const handleFetchFeedback = async () => {
+    await fetchFeedback(pubKey, fbId).then((values) => _setFbData(values));
+  };
+
+  return (
+    <div className="flex flex-wrap flex-col font-semibold bg-orange-300 rounded-lg my-4 items-center border p-4">
+      <div className="flex-wrap bg-orange-400 w-full p-2 rounded-md sm:text-2xl font-bold text-center flex justify-between gap-3 items-center">
+        Check Feedback
+        <input
+          type="text"
+          className="sm:w-full p-2 rounded-md"
+          placeholder="Enter Feedback ID"
+          onChange={(e) => _setFbId(e.target.value)}
+        />
+        <button
+          className="text-lg hover:bg-violet-500 bg-orange-700 rounded-md p-1 font-bold text-white"
+          onClick={handleFetchFeedback}
+        >
+          Fetch
+        </button>
+      </div>
+      <div>
+        <div className="text-2xl">Feedback</div>
+        <div className="text-2xl bg-cyan-300 p-4 border-4 border-black">
+          {fbData}
+        </div>
+      </div>
+    </div>
+  );
+};
