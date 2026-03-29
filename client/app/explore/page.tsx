@@ -58,7 +58,7 @@ export default function ExploreJobsPage() {
   }, [handleLoadAllJobs]);
 
   return (
-    <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 animate-fade-in-up">
+    <main className="flex-1 w-full max-w-6xl mx-auto px-6 pt-28 pb-12 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Explore Jobs</h1>
