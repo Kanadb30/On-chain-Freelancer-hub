@@ -28,7 +28,7 @@ export default function Home() {
   }, [handleFetchStats]);
 
   return (
-    <main className="relative flex-1 flex flex-col items-center justify-center -mt-10 px-6 animate-fade-in-up">
+    <main className="relative flex-1 flex flex-col items-center justify-center pt-32 px-6 animate-fade-in-up">
       {/* Hyper Professional Clean Hero */}
       <div className="max-w-4xl text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-700 shadow-sm">
