@@ -78,7 +78,7 @@ export default function JobBidsPage() {
   };
 
   return (
-    <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-12 animate-fade-in-up">
+    <main className="flex-1 w-full max-w-5xl mx-auto px-6 pt-28 pb-12 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
         <div>
           <button onClick={() => router.push("/explore")} className="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors mb-2 flex items-center gap-1">
