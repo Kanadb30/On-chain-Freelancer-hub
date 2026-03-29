@@ -1,5 +1,9 @@
 # On-Chain Freelancer Hub
 
+<p align="center">
+  <img src="./docs/assets/logo.png" width="120" height="120" alt="Freelancer Hub Logo" />
+</p>
+
 > A decentralized, trustless freelance marketplace smart contract built on the **Stellar blockchain** using the **Soroban SDK**.
 
 ---
