@@ -13,6 +13,9 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "On-Chain Freelancer Hub",
   description: "A decentralized, trustless freelance marketplace smart contract built on Stellar",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
