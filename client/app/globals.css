@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050510;
-  --foreground: #e4e4f0;
-  --accent: #7c6cf0;
-  --accent-2: #4fc3f7;
+  --background: #f7f9fb;
+  --foreground: #1e293b;
+  --accent: #4a4bd7;
+  --accent-2: #ffc5d9;
   --success: #34d399;
   --error: #f87171;
   --warning: #fbbf24;
@@ -102,5 +102,5 @@ body {
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.2); }
