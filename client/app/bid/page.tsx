@@ -54,7 +54,7 @@ export default function SubmitBidPage() {
   }, [walletAddress, bidJobId, bidProposal, bidAskPrice]);
 
   return (
-    <main className="flex-1 flex flex-col max-w-2xl w-full mx-auto px-6 py-12 animate-fade-in-up">
+    <main className="flex-1 flex flex-col max-w-2xl w-full mx-auto px-6 pt-28 pb-12 animate-fade-in-up">
       <div className="mb-10 text-center">
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-4">Direct Bid</h1>
         <p className="text-slate-500 text-lg">Submit a proposal directly using a known Job ID.</p>
