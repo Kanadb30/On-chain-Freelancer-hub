@@ -135,3 +135,8 @@ Contract ID - CCV2N6JKKNQUKZIKNJPBHD7GICZESEXHQ73Q2CHBN5W5DSXXI36NG6NN
 
 
 *Built with ❤️ on Stellar · Powered by Soroban SDK*
+
+## Site Walkthrough
+
+![Site Walkthrough](./docs/assets/walkthrough.webp)
+
