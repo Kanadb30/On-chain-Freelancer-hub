@@ -1,150 +1,96 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Meteors } from "@/components/ui/meteors";
-import Navbar from "@/components/Navbar";
-import ContractUI from "@/components/Contract";
-import {
-  connectWallet,
-  getWalletAddress,
-  checkConnection,
-} from "@/hooks/contract";
+import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+import { viewHubStats } from "@/hooks/contract";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [hubStats, setHubStats] = useState<Record<string, string> | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        if (await checkConnection()) {
-          const addr = await getWalletAddress();
-          if (addr) setWalletAddress(addr);
-        }
-      } catch {
-        /* Freighter not installed */
-      }
-    })();
-  }, []);
-
-  const handleConnect = useCallback(async () => {
-    setIsConnecting(true);
+  const handleFetchStats = useCallback(async () => {
     try {
-      setWalletAddress(await connectWallet());
-    } catch {
-      // handled in Contract component
-    } finally {
-      setIsConnecting(false);
+      const result = await viewHubStats();
+      if (result && typeof result === "object") {
+        const mapped: Record<string, string> = {};
+        for (const [k, v] of Object.entries(result)) {
+          mapped[String(k)] = String(v);
+        }
+        setHubStats(mapped);
+      }
+    } catch (err) {
+      console.error(err);
     }
   }, []);
 
-  const handleDisconnect = useCallback(() => {
-    setWalletAddress(null);
-  }, []);
+  useEffect(() => {
+    handleFetchStats();
+  }, [handleFetchStats]);
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-[#050510] overflow-hidden">
-      {/* Meteors */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <Meteors number={12} />
-      </div>
-
-      {/* Ambient orbs */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute top-[-20%] left-[-10%] h-[600px] w-[600px] rounded-full bg-[#7c6cf0]/20 blur-[120px] animate-float" />
-        <div className="absolute bottom-[-10%] right-[-5%] h-[500px] w-[500px] rounded-full bg-[#4fc3f7]/15 blur-[120px] animate-float-delayed" />
-      </div>
-
-      {/* Navbar */}
-      <Navbar
-        walletAddress={walletAddress}
-        onConnect={handleConnect}
-        onDisconnect={handleDisconnect}
-        isConnecting={isConnecting}
-      />
-
-      {/* Hero + Content */}
-      <main className="relative z-10 flex flex-1 w-full max-w-5xl mx-auto flex-col items-center px-6 pt-10 pb-16">
-        {/* Hero — compact */}
-        <div className="mb-10 text-center animate-fade-in-up">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-sm text-white/50 backdrop-blur-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#7c6cf0] opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#7c6cf0]" />
-            </span>
-            Powered by Soroban on Stellar
-          </div>
-
-          <h1 className="mb-3">
-            <span className="block text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]">
-              <span className="text-white">Supply Chain </span>
-              <span className="bg-gradient-to-r from-[#7c6cf0] via-[#4fc3f7] to-[#7c6cf0] bg-[length:200%_auto] animate-gradient-shift bg-clip-text text-transparent">
-                on the Blockchain
-              </span>
-            </span>
-          </h1>
-
-          <p className="mx-auto max-w-lg text-sm sm:text-base leading-relaxed text-white/40">
-            Register products, track shipments, and verify authenticity — immutably on Stellar.
-          </p>
-
-          {/* Inline stats */}
-          <div className="mt-6 flex items-center justify-center gap-6 sm:gap-10 animate-fade-in-up-delayed">
-            {[
-              { label: "Finality", value: "~5s" },
-              { label: "Cost", value: "<$0.01" },
-              { label: "Network", value: "Testnet" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-lg sm:text-xl font-bold text-white/90 font-mono">{stat.value}</p>
-                <p className="text-[10px] text-white/30 mt-0.5">{stat.label}</p>
-              </div>
-            ))}
-          </div>
+    <main className="relative flex-1 flex flex-col items-center justify-center -mt-10 px-6 animate-fade-in-up">
+      {/* Hyper Professional Clean Hero */}
+      <div className="max-w-4xl text-center">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          </span>
+          Decentralized Escrow Active on Soroban
         </div>
 
-        {/* Contract UI */}
-        <ContractUI
-          walletAddress={walletAddress}
-          onConnect={handleConnect}
-          isConnecting={isConnecting}
-        />
+        <h1 className="mb-6 text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 leading-tight">
+          Trustless Freelance <br />
+          <span className="text-indigo-600">Work Coordination.</span>
+        </h1>
 
-        {/* Footer */}
-        <div className="mt-10 flex flex-col items-center gap-4 animate-fade-in">
-          {/* Supply chain flow */}
-          <div className="flex items-center gap-3 text-xs text-white/20">
-            {["Created", "Shipped", "Delivered"].map((step, i) => (
-              <span key={step} className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5">
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      i === 0
-                        ? "bg-[#fbbf24]/50"
-                        : i === 1
-                          ? "bg-[#4fc3f7]/50"
-                          : "bg-[#34d399]/50"
-                    }`}
-                  />
-                  <span className="font-mono">{step}</span>
-                </span>
-                {i < 2 && (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/10">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                )}
-              </span>
-            ))}
-          </div>
-          <div className="flex items-center gap-4 text-[10px] text-white/15">
-            <span>Stellar Network</span>
-            <span className="h-2.5 w-px bg-white/10" />
-            <span>Freighter Wallet</span>
-            <span className="h-2.5 w-px bg-white/10" />
-            <span>Soroban Smart Contracts</span>
-          </div>
+        <p className="mx-auto max-w-2xl text-lg md:text-xl leading-relaxed text-slate-500 mb-10">
+          Post requirements, accept competitive bids, and securely release funds entirely on-chain without trusting any centralized platform.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link href="/explore" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-slate-900 text-white font-bold text-base shadow-lg hover:bg-slate-800 transition-all hover:-translate-y-0.5">
+            Explore Marketplace
+          </Link>
+          <Link href="/post" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-slate-900 font-bold text-base shadow-sm border border-slate-200 hover:bg-slate-50 transition-all hover:-translate-y-0.5">
+            Post a Job
+          </Link>
         </div>
-      </main>
-    </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="w-full max-w-5xl mt-24 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {[
+            { label: "Total Jobs Posted", val: hubStats?.total_jobs || "Loading..." },
+            { label: "Active Network Bids", val: hubStats?.total_bids || "Loading..." },
+            { label: "Successfully Completed", val: hubStats?.total_completed || "Loading..." },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+              <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{stat.label}</div>
+              <div className="text-4xl font-extrabold text-slate-900 font-mono">{stat.val}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer Details */}
+      <div className="mt-auto pb-8 flex flex-col items-center gap-6">
+        <div className="flex items-center gap-8 justify-center flex-wrap">
+          {[
+             { name: "Post Job", color: "bg-indigo-500" },
+             { name: "Await Bids", color: "bg-amber-500" },
+             { name: "Assign Escrow", color: "bg-cyan-500" },
+             { name: "Complete Work", color: "bg-emerald-500" }
+          ].map((step, i) => (
+            <div key={step.name} className="flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${step.color}`} />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{step.name}</span>
+              {i < 3 && <span className="ml-6 h-px w-6 bg-slate-200" />}
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }
